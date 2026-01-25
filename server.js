@@ -10,36 +10,34 @@ const app = express();
 connectDB();
 
 // ✅ Middleware
+
+// CORS configuration: allow local dev + deployed frontend
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // for local dev (Vite)
-      "http://localhost:3000",
-      "https://your-app.vercel.app" // 🔴 CHANGE THIS after frontend deploy
+      "http://localhost:5173",          // Vite dev server
+      "http://localhost:3000",          // optional React dev server
+      "https://your-frontend.vercel.app" // 🔴 Replace with your deployed frontend URL
     ],
-    credentials: true
+    credentials: true, // allow cookies/auth headers
   })
 );
+
+// ✅ Body parser
+app.use(express.json());
+
+// ✅ Logger middleware
+app.use((req, res, next) => {
+  console.log(`🛰️ ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// ✅ Health check route (for Render monitoring or uptime checks)
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "OK",
     message: "Backend is running 🚀",
   });
-});
-
-
-
-
-
-
-
-
-app.use(express.json());
-
-// ✅ Logger (safe for production)
-app.use((req, res, next) => {
-  console.log(`🛰️ ${req.method} ${req.originalUrl}`);
-  next();
 });
 
 // ✅ Import routes
@@ -62,12 +60,12 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
 
-// ✅ Health check route (VERY useful for Render)
+// ✅ Default root route
 app.get("/", (req, res) => {
   res.status(200).send("🚀 API is running successfully");
 });
 
-// ✅ Start server (Render will inject PORT)
+// ✅ Start server (Render injects PORT)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
