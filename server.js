@@ -20,6 +20,19 @@ app.use(
     credentials: true
   })
 );
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    message: "Backend is running 🚀",
+  });
+});
+
+
+
+
+
+
+
 
 app.use(express.json());
 
