@@ -1,46 +1,54 @@
-require("dotenv").config(); // ✅ Load environment variables
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const connectDB = require("./config/db"); // 🔌 MongoDB connection
+const connectDB = require("./config/db");
 
 const app = express();
 
-// ✅ Connect to MongoDB
+// ✅ Connect MongoDB
 connectDB();
 
-// ✅ Middleware
+// ✅ CORS middleware: must be BEFORE routes
+const allowedOrigins = [
+  "http://localhost:5173",          // Vite dev
+  "http://localhost:5178",          // your current local port
+  "http://localhost:3000",          // optional
+  "https://your-frontend.vercel.app" // deployed frontend
+];
 
-// CORS configuration: allow local dev + deployed frontend
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",          // Vite dev server
-      "http://localhost:3000",          // optional React dev server
-      "https://your-frontend.vercel.app" // 🔴 Replace with your deployed frontend URL
-    ],
-    credentials: true, // allow cookies/auth headers
-  })
-);
+app.use(cors({
+  origin: function(origin, callback) {
+    // allow requests with no origin (like Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
+  credentials: true
+}));
 
 // ✅ Body parser
 app.use(express.json());
 
-// ✅ Logger middleware
+// ✅ Logger
 app.use((req, res, next) => {
   console.log(`🛰️ ${req.method} ${req.originalUrl}`);
   next();
 });
 
-// ✅ Health check route (for Render monitoring or uptime checks)
+// ✅ Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "OK",
-    message: "Backend is running 🚀",
+    message: "Backend is running 🚀"
   });
 });
 
-// ✅ Import routes
+// ✅ Routes
 const authRoutes = require("./routes/authRoutes");           
 const userRoutes = require("./routes/userRoutes");           
 const orderRoutes = require("./routes/orderRoutes");         
@@ -50,7 +58,6 @@ const uploadRoutes = require("./routes/upload");
 const analyticsRoutes = require("./routes/analyticsRoutes"); 
 const adminRoutes = require("./routes/adminRoutes");         
 
-// ✅ Route bindings
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
@@ -60,12 +67,12 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
 
-// ✅ Default root route
+// ✅ Default root
 app.get("/", (req, res) => {
   res.status(200).send("🚀 API is running successfully");
 });
 
-// ✅ Start server (Render injects PORT)
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
