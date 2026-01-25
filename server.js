@@ -9,20 +9,22 @@ const app = express();
 // ✅ Connect MongoDB
 connectDB();
 
-// ✅ CORS middleware: must be BEFORE routes
+// ✅ CORS middleware (must be BEFORE routes)
 const allowedOrigins = [
-  "http://localhost:5173",          // Vite dev
-  "http://localhost:5178",          // your current local port
-  "http://localhost:3000",          // optional
+  "http://localhost:5173",           // Vite dev port
+  "http://localhost:5178",           // alternate dev port
+  "http://localhost:5179",           // add more dev ports if needed
+  "http://localhost:3000",           // optional
   "https://your-frontend.vercel.app" // deployed frontend
 ];
 
 app.use(cors({
   origin: function(origin, callback) {
-    // allow requests with no origin (like Postman)
+    // allow requests with no origin (Postman, curl, mobile apps)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      const msg = `❌ CORS blocked for origin: ${origin}`;
+      console.log(msg);
       return callback(new Error(msg), false);
     }
     return callback(null, true);
@@ -48,16 +50,17 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ✅ Routes
-const authRoutes = require("./routes/authRoutes");           
-const userRoutes = require("./routes/userRoutes");           
-const orderRoutes = require("./routes/orderRoutes");         
-const menuRoutes = require("./routes/menuRoutes");           
-const tableRoutes = require("./routes/tableRoutes");         
-const uploadRoutes = require("./routes/upload");             
-const analyticsRoutes = require("./routes/analyticsRoutes"); 
-const adminRoutes = require("./routes/adminRoutes");         
+// ✅ Import routes
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const menuRoutes = require("./routes/menuRoutes");
+const tableRoutes = require("./routes/tableRoutes");
+const uploadRoutes = require("./routes/upload");
+const analyticsRoutes = require("./routes/analyticsRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
+// ✅ Route bindings
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
@@ -72,7 +75,7 @@ app.get("/", (req, res) => {
   res.status(200).send("🚀 API is running successfully");
 });
 
-// ✅ Start server
+// ✅ Start server (Render will inject PORT)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
